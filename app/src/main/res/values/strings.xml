@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Net Coin</string>
     <string name="action_settings">Settings</string>
+    <string name="facebook_app_id">566236693548608</string>
 </resources>
