@@ -3,9 +3,11 @@ package com.netcoin.login.register.view;
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -20,6 +22,7 @@ import com.netcoin.login.register.presenter.RegisterPresenterImpl;
 import com.netcoin.main.view.MainActivity;
 import com.netcoin.user.User;
 import com.netcoin.utils.Constants;
+import com.netcoin.utils.Utilities;
 
 
 /**
@@ -38,7 +41,12 @@ public class RegisterActivity extends AppCompatActivity implements RegisterActiv
 
 	private ProgressDialog progressDialog;
 
-	Button register;
+	private Button register;
+
+	private final String TAG = Utilities.getTag(this);
+
+	private SharedPreferences sharedPreferences;
+	private SharedPreferences.Editor editor;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +55,8 @@ public class RegisterActivity extends AppCompatActivity implements RegisterActiv
 
 		presenter = new RegisterPresenterImpl(this);
 
+		sharedPreferences = getSharedPreferences(Constants.MY_PREF, Context.MODE_PRIVATE);
+
 		details = getFragmentManager().findFragmentById(R.id.registerDetailsFragment);
 
 		email = (EditText) details.getView().findViewById(R.id.emailText);
@@ -54,7 +64,6 @@ public class RegisterActivity extends AppCompatActivity implements RegisterActiv
 		phoneNo = (EditText) findViewById(R.id.phoneNumber);
 
 		progressDialog = new ProgressDialog(this);
-		progressDialog.setMessage("Registering User");
 		progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 		progressDialog.setIndeterminate(true);
 
@@ -69,12 +78,38 @@ public class RegisterActivity extends AppCompatActivity implements RegisterActiv
 	}
 
 	@Override
+	public void showOTPDialogBox() {
+		final EditText otpEditText = new EditText(this);
+		AlertDialog alertDialog = new AlertDialog.Builder(this)
+				.setTitle("Enter the OTP received")
+				.setView(otpEditText)
+				.setPositiveButton("Validate", new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						String otp = otpEditText.getText().toString();
+						presenter.onOTPEntered(otp);
+					}
+				})
+				.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+
+					}
+				})
+				.setCancelable(false)
+				.create();
+		alertDialog.show();
+
+	}
+
+	@Override
 	public void hideProgressBar() {
 		progressDialog.hide();
 	}
 
 	@Override
-	public void showProgressBar() {
+	public void showProgressBar(String message) {
+		progressDialog.setMessage(message);
 		progressDialog.show();
 	}
 
@@ -91,25 +126,13 @@ public class RegisterActivity extends AppCompatActivity implements RegisterActiv
 	}
 
 	@Override
-	public void writeToSharedPreferences(String uid, String token) {
-		SharedPreferences sharedPreferences = getSharedPreferences(Constants.MY_PREF, Context.MODE_PRIVATE);
-		SharedPreferences.Editor editor = sharedPreferences.edit();
-		editor.putString("provider", "password");
-		Gson gson = new Gson();
-		Log.i("EMAIL VIEW", uid + " " + token);
-		editor.putString("uid", uid);
-		editor.putString("accessToken", token);
-		editor.commit();
-		Log.i("Login UID", "The uid is - " + sharedPreferences.getString("uid", ""));
-	}
-
-	@Override
 	public void writeToSharedPreferences(User user) {
-		SharedPreferences sharedPreferences = getSharedPreferences(Constants.MY_PREF, Context.MODE_PRIVATE);
-		SharedPreferences.Editor editor = sharedPreferences.edit();
 		Gson gson = new Gson();
 		String jsonString = gson.toJson(user);
+		Log.i(TAG, jsonString);
+		editor = sharedPreferences.edit();
 		editor.putString("user", jsonString);
+		editor.apply();
 	}
 
 	@Override

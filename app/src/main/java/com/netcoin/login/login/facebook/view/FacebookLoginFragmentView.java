@@ -7,14 +7,18 @@ import com.netcoin.user.User;
  */
 public interface FacebookLoginFragmentView {
 
-    void openMainPage();
+	void openMainPage();
 
-    void onError();
+	void onError();
 
-    void writeToSharedPrefernces(User user);
+	void writeToSharedPreferences(User user);
 
-    void showProgressDialog();
+	void showAlertDialogBox(int mode, String title);
 
-    void hideProgressDialog();
+	void showProgressDialog(String message);
+
+	void hideProgressDialog();
+
+	void showToastMessage(String message);
 
 }

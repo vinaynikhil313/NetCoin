@@ -40,13 +40,13 @@ import java.security.NoSuchAlgorithmException;
  */
 public class StartPage extends Activity implements StartPageView {
 
-	boolean openLoginPageFlag = true;
-	ProgressBar progressBar;
+	private boolean openLoginPageFlag = true;
+	private ProgressBar progressBar;
 
-	StartPagePresenter presenter;
+	private StartPagePresenter presenter;
 
-	SharedPreferences sharedPreferences;
-	SharedPreferences.Editor editor;
+	private SharedPreferences sharedPreferences;
+	private SharedPreferences.Editor editor;
 
 	private static final String TAG = StartPage.class.getSimpleName();
 
@@ -63,7 +63,6 @@ public class StartPage extends Activity implements StartPageView {
 		FacebookSdk.sdkInitialize(getApplicationContext(), presenter);
 
 		sharedPreferences = getSharedPreferences(Constants.MY_PREF, Context.MODE_PRIVATE);
-		editor = sharedPreferences.edit();
 
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
@@ -72,10 +71,10 @@ public class StartPage extends Activity implements StartPageView {
 			Log.i(TAG, "No Internet");
 			Toast.makeText(StartPage.this, "Internet not available..." +
 					"\nPlease check your internet and try again", Toast.LENGTH_LONG).show();
-			finish();
+			//finish();
 		}
 
-		isLocationEnabled();
+		//isLocationEnabled();
 
 		checkPreviousPasswordLogin();
 
@@ -84,6 +83,7 @@ public class StartPage extends Activity implements StartPageView {
 	void checkPreviousPasswordLogin() {
 		Log.i(TAG, "Checking previous password login");
 		String userJson = sharedPreferences.getString("user", "");
+		Log.i(TAG, "User is " + userJson);
 		if(! userJson.equals("") && ! userJson.isEmpty()) {
 			Log.i(TAG, "UserJson = " + userJson);
 			Log.i(TAG, "Provider is password");
@@ -105,14 +105,13 @@ public class StartPage extends Activity implements StartPageView {
 	@Override
 	public void writeToSharedPreferences(User user) {
 
-		SharedPreferences.Editor editor = sharedPreferences.edit();
-
 		Log.i(TAG, user.getAccessToken());
 
 		Gson gson = new Gson();
 		String userJson = gson.toJson(user);
+		editor = sharedPreferences.edit();
 		editor.putString("user", userJson);
-		editor.commit();
+		editor.apply();
 		Log.i("Login UID", "The user is - " + sharedPreferences.getString("user", ""));
 
 	}
@@ -133,10 +132,8 @@ public class StartPage extends Activity implements StartPageView {
 				md.update(signature.toByteArray());
 				Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
 			}
-		} catch(PackageManager.NameNotFoundException e) {
-
-		} catch(NoSuchAlgorithmException e) {
-
+		} catch(PackageManager.NameNotFoundException | NoSuchAlgorithmException  e) {
+			Log.i(TAG, e.getLocalizedMessage());
 		}
 
 	}
@@ -188,17 +185,18 @@ public class StartPage extends Activity implements StartPageView {
 	private boolean isLocationEnabled() {
 
 		AlertDialog dialog;
-		LocationManager lm = null;
+		LocationManager lm;
 		boolean gps_enabled = false, network_enabled = false;
-		if(lm == null)
-			lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		try {
 			gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
 		} catch(Exception ex) {
+			Log.i(TAG, ex.getLocalizedMessage());
 		}
 		try {
 			network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 		} catch(Exception ex) {
+			Log.i(TAG, ex.getLocalizedMessage());
 		}
 
 		if(! gps_enabled && ! network_enabled) {
@@ -225,8 +223,7 @@ public class StartPage extends Activity implements StartPageView {
 					.create();
 			dialog.show();
 
-		}
-		else
+		} else
 			return true;
 
 		return false;

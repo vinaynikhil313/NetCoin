@@ -7,4 +7,6 @@ public interface RegisterPresenter {
 
     void createUser(String email, String password, String phoneNo);
 
+	void onOTPEntered(String OTP);
+
 }

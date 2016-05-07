@@ -7,6 +7,7 @@ import com.netcoin.login.login.email.presenter.OnEmailLoginFinishedListener;
  */
 public interface EmailLoginInteractor {
 
-    void authenticateWithEmail(String email, String password, OnEmailLoginFinishedListener listener);
+	void authenticateWithEmail(String email, String password, OnEmailLoginFinishedListener listener);
 
+	void validatePhoneNo(String phoneNo);
 }

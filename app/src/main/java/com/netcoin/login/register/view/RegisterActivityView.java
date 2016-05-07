@@ -7,15 +7,15 @@ import com.netcoin.user.User;
  */
 public interface RegisterActivityView {
 
+	void showOTPDialogBox();
+
 	void openHomePage();
 
 	void registrationError(String message);
 
-	void showProgressBar();
+	void showProgressBar(String message);
 
 	void hideProgressBar();
-
-	void writeToSharedPreferences(String uid, String token);
 
 	void writeToSharedPreferences(User user);
 

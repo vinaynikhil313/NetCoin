@@ -11,4 +11,6 @@ public interface OnRegisterFinishedListener {
 
 	void onFailure(int errorCode);
 
+	void onOTPReceived(String OTP);
+
 }

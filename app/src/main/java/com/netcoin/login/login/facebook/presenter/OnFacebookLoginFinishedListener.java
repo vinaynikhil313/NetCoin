@@ -7,8 +7,10 @@ import com.netcoin.user.User;
  */
 public interface OnFacebookLoginFinishedListener {
 
-    void onFirebaseLoginSuccess(User user);
+	void onOTPReceived(String OTP);
 
-    void onFirebaseLoginFailure();
+	void onFirebaseLoginSuccess(User user);
+
+	void onFirebaseLoginFailure();
 
 }

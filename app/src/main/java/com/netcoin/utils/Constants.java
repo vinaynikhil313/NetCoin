@@ -30,7 +30,8 @@ public class Constants {
 	public static final String ORIGINS_TEXT = "origins";
 	public static final String DESTINATION_TEXT = "destination";
 	public static final String DESTINATIONS_TEXT = "destinations";
-	public static final String SERVER_ADDRESS = "http://ec2-52-90-110-157.compute-1.amazonaws.com:8080/OxfordRoadRideSharingServer/";
+	public static final String SERVER_ADDRESS = "http://10.0.3.2:8080/NetCoinServer";
+	public static final String VALIDATE_URL = "/validate";
 	public static final String YOUR_LOCATION = "Your Location";
 
 }

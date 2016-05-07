@@ -57,7 +57,6 @@ public class LoginActivityFragment extends Fragment implements EmailLoginFragmen
 		emailLoginPresenter = new EmailLoginPresenterImpl(this);
 
 		sharedPreferences = getContext().getSharedPreferences(Constants.MY_PREF, Context.MODE_PRIVATE);
-		editor = sharedPreferences.edit();
 
 		email = (EditText) viewGroup.findViewById(R.id.emailText);
 		password = (EditText) viewGroup.findViewById(R.id.passwordText);
@@ -103,11 +102,12 @@ public class LoginActivityFragment extends Fragment implements EmailLoginFragmen
 
 	@Override
 	public void writeToSharedPreferences(User user) {
-		Log.i("EMAIL VIEW", "UID = " + user.getUid());
+		Log.i(TAG, "UID = " + user.getUid());
 		Gson userGson = new Gson();
 		String userJson = userGson.toJson(user);
+		editor = sharedPreferences.edit();
 		editor.putString("user", userJson);
-		editor.commit();
+		editor.apply();
 		Log.i("Login UID", "The user is - " + sharedPreferences.getString("user", ""));
 	}
 

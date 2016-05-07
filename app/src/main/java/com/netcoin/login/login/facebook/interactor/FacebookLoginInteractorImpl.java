@@ -11,71 +11,101 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 import com.netcoin.application.NetCoinApp;
 import com.netcoin.login.login.facebook.presenter.OnFacebookLoginFinishedListener;
 import com.netcoin.user.User;
 import com.netcoin.utils.Constants;
+import com.netcoin.utils.RestApiHelper;
 import com.netcoin.utils.UpdateFirebaseLogin;
+import com.netcoin.utils.Utilities;
 
 import org.json.JSONObject;
+
+import cz.msebera.android.httpclient.Header;
 
 /**
  * Created by Vinay Nikhil Pabba on 27-01-2016.
  */
 public class FacebookLoginInteractorImpl implements
-        FacebookLoginInteractor, Firebase.AuthResultHandler, ValueEventListener{
+		FacebookLoginInteractor, Firebase.AuthResultHandler, ValueEventListener {
 
-    private Firebase firebase = NetCoinApp.getFirebaseInstance();
-    OnFacebookLoginFinishedListener listener;
+	private Firebase firebase = NetCoinApp.getFirebaseInstance();
 
-    @Override
-    public void requestData (OnFacebookLoginFinishedListener listener) {
-        //Log.i(TAG + " inside requestData ", AccessToken.getCurrentAccessToken ().getToken ());
-        this.listener = listener;
-        GraphRequest request = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(),
-                new GraphRequest.GraphJSONObjectCallback() {
-                    @Override
-                    public void onCompleted(JSONObject object,GraphResponse response) {
+	private final String TAG = Utilities.getTag(this);
 
-                        JSONObject json = response.getJSONObject();
-                        Log.i("JSON ", json.toString ());
+	private OnFacebookLoginFinishedListener listener;
 
-                        if (json != null) {
-                            firebase.authWithOAuthToken (Constants.PROVIDER_FACEBOOK,
-                                    AccessToken.getCurrentAccessToken ().getToken (), FacebookLoginInteractorImpl.this);
-                        }
+	public FacebookLoginInteractorImpl(OnFacebookLoginFinishedListener listener) {
+		this.listener = listener;
+	}
 
-                    }
-                });
+	@Override
+	public void generateOTP(String phoneNo) {
+		RequestParams requestParams = new RequestParams();
+		requestParams.add("phoneNo", phoneNo);
+		RestApiHelper.get(Constants.VALIDATE_URL, requestParams, new JsonHttpResponseHandler() {
+			@Override
+			public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+				Log.i(TAG, response.toString());
+				listener.onOTPReceived("123abc");
+			}
 
-        Bundle parameters = new Bundle();
-        parameters.putString ("fields", "id,name,link,email,picture");
-        request.setParameters (parameters);
-        request.executeAsync ();
-    }
+			@Override
+			public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+				super.onFailure(statusCode, headers, throwable, errorResponse);
+			}
+		});
+	}
 
-    @Override
-    public void onAuthenticated (AuthData authData) {
-        //listener.onFirebaseLoginSuccess (user);
-        UpdateFirebaseLogin.updateFirebase (authData);
+	@Override
+	public void requestData() {
+		//Log.i(TAG + " inside requestData ", AccessToken.getCurrentAccessToken ().getToken ());
+		//this.listener = listener;
+		GraphRequest request = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(),
+				new GraphRequest.GraphJSONObjectCallback() {
+					@Override
+					public void onCompleted(JSONObject object, GraphResponse response) {
 
-        firebase.child ("users").child (authData.getUid ()).addListenerForSingleValueEvent (this);
-    }
+						JSONObject json = response.getJSONObject();
+						Log.i("JSON ", json.toString());
 
-    @Override
-    public void onAuthenticationError (FirebaseError firebaseError) {
-        listener.onFirebaseLoginFailure ();
-    }
+						firebase.authWithOAuthToken(Constants.PROVIDER_FACEBOOK,
+								AccessToken.getCurrentAccessToken().getToken(), FacebookLoginInteractorImpl.this);
 
-    @Override
-    public void onCancelled (FirebaseError firebaseError) {
 
-    }
+					}
+				}
+		);
 
-    @Override
-    public void onDataChange (DataSnapshot dataSnapshot) {
-        User user = dataSnapshot.getValue (User.class);
-        Log.i("FACEBOOK INTERACTOR", "UID = " + user.getUid ());
-        listener.onFirebaseLoginSuccess (user);
-    }
+		Bundle parameters = new Bundle();
+		parameters.putString("fields", "id,name,link,email,picture");
+		request.setParameters(parameters);
+		request.executeAsync();
+	}
+
+	@Override
+	public void onAuthenticated(AuthData authData) {
+		UpdateFirebaseLogin.updateFirebase(authData);
+
+		firebase.child("users").child(authData.getUid()).addListenerForSingleValueEvent(this);
+	}
+
+	@Override
+	public void onAuthenticationError(FirebaseError firebaseError) {
+		listener.onFirebaseLoginFailure();
+	}
+
+	@Override
+	public void onCancelled(FirebaseError firebaseError) {
+
+	}
+
+	@Override
+	public void onDataChange(DataSnapshot dataSnapshot) {
+		User user = dataSnapshot.getValue(User.class);
+		Log.i(TAG, "UID = " + user.getUid());
+		listener.onFirebaseLoginSuccess(user);
+	}
 }

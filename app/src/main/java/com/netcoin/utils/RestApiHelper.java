@@ -10,9 +10,9 @@ import com.loopj.android.http.RequestParams;
  * Created by Vinay Nikhil Pabba on 16-12-2015.
  */
 
-public class GoogleDirectionsApiHelper {
+public class RestApiHelper {
 
-	private final static String TAG = "DirectionsApiHelper";
+	private final static String TAG = RestApiHelper.class.getSimpleName();
 
 	private static AsyncHttpClient client = new AsyncHttpClient();
 

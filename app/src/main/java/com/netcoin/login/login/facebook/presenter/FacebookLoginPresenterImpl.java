@@ -3,7 +3,6 @@ package com.netcoin.login.login.facebook.presenter;
 import android.util.Log;
 
 import com.facebook.AccessToken;
-import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.login.LoginResult;
 import com.netcoin.login.login.facebook.interactor.FacebookLoginInteractor;
@@ -14,59 +13,84 @@ import com.netcoin.user.User;
 /**
  * Created by Vinay Nikhil Pabba on 27-01-2016.
  */
-public class FacebookLoginPresenterImpl implements FacebookLoginPresenter,
-        OnFacebookLoginFinishedListener, FacebookCallback<LoginResult> {
+public class FacebookLoginPresenterImpl implements FacebookLoginPresenter {
 
-    FacebookLoginFragmentView view;
-    FacebookLoginInteractor interactor;
+	private FacebookLoginFragmentView view;
+	private FacebookLoginInteractor interactor;
 
-    private static final String TAG = FacebookLoginPresenterImpl.class.getSimpleName ();
+	public static final int MODE_PHONE_NO = 0;
+	public static final int MODE_OTP = 1;
 
-    public FacebookLoginPresenterImpl(FacebookLoginFragmentView view){
+	private String otp;
 
-        this.view = view;
-        interactor = new FacebookLoginInteractorImpl();
-        Log.i(TAG, "FacebookPresenter created");
 
-    }
+	private static final String TAG = FacebookLoginPresenterImpl.class.getSimpleName();
 
-    @Override
-    public void onFirebaseLoginFailure () {
-        view.hideProgressDialog ();
-        view.onError ();
-    }
+	public FacebookLoginPresenterImpl(FacebookLoginFragmentView view) {
 
-    @Override
-    public void onFirebaseLoginSuccess (User user) {
-        Log.i (TAG, "Firebase Facebook Login successful");
-        view.writeToSharedPrefernces (user);
-        view.hideProgressDialog ();
+		this.view = view;
+		interactor = new FacebookLoginInteractorImpl(this);
+		Log.i(TAG, "FacebookPresenter created");
 
-        //if(user.getPreferences ().size () > 0)
-            view.openMainPage ();
-        //else{}
-            //view.openPreferencesPage ();
-    }
+	}
 
-    @Override
-    public void onCancel () {
+	@Override
+	public void onAlertDialogTextEntered(int mode, String text) {
+		if(mode == MODE_PHONE_NO) {
+			view.showProgressDialog("Generating OTP");
+			interactor.generateOTP(text);
+		} else if(mode == MODE_OTP) {
+			view.showProgressDialog("Verifying OTP");
+			if(otp.equals(text)) {
+				view.showToastMessage("OTP Verified. Registering User");
+				interactor.requestData();
+			} else {
+				view.hideProgressDialog();
+				view.showToastMessage("Incorrect OTP Entered. Please try again");
+				view.showAlertDialogBox(MODE_OTP, "Enter the OTP received");
+			}
+		}
+	}
 
-    }
+	@Override
+	public void onOTPReceived(String OTP) {
+		this.otp = OTP;
+		view.hideProgressDialog();
+		view.showAlertDialogBox(MODE_OTP, "Enter the OTP received");
+	}
 
-    @Override
-    public void onError (FacebookException error) {
+	@Override
+	public void onFirebaseLoginFailure() {
+		view.hideProgressDialog();
+		view.onError();
+	}
 
-    }
+	@Override
+	public void onFirebaseLoginSuccess(User user) {
+		Log.i(TAG, "Firebase Facebook Login successful");
+		view.writeToSharedPreferences(user);
+		view.hideProgressDialog();
+		view.openMainPage();
+	}
 
-    @Override
-    public void onSuccess (LoginResult loginResult) {
-        view.showProgressDialog ();
-        AccessToken accessToken = loginResult.getAccessToken ();
-        Log.i (TAG, accessToken.getToken ());
-        AccessToken.setCurrentAccessToken (accessToken);
-        if (accessToken != null) {
-            Log.i (TAG, "Facebook Login Successful");
-            interactor.requestData (this);
-        }
-    }
+	@Override
+	public void onCancel() {
+
+	}
+
+	@Override
+	public void onError(FacebookException error) {
+
+	}
+
+	@Override
+	public void onSuccess(LoginResult loginResult) {
+		view.showAlertDialogBox(MODE_PHONE_NO, "Enter Phone Number");
+		AccessToken accessToken = loginResult.getAccessToken();
+		Log.i(TAG, accessToken.getToken());
+		AccessToken.setCurrentAccessToken(accessToken);
+		Log.i(TAG, "Facebook Login Successful");
+		//interactor.requestData(this);
+
+	}
 }

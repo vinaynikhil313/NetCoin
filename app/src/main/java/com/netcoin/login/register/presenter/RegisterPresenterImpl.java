@@ -18,19 +18,46 @@ public class RegisterPresenterImpl implements RegisterPresenter, OnRegisterFinis
 	private String TAG = Utilities.getTag(this);
 	private RegisterInteractor interactor;
 	private RegisterActivityView view;
+	private String email, password, phoneNo, otp;
 
 	public RegisterPresenterImpl(RegisterActivity view) {
 
 		this.view = view;
-		interactor = new RegisterInteractorImpl();
+		interactor = new RegisterInteractorImpl(this);
 
 	}
 
 	@Override
 	public void createUser(String email, String password, String phoneNo) {
-		view.showProgressBar();
-		if(validate(email, password, phoneNo))
-			interactor.registerUser(email, password, phoneNo, this);
+		view.showProgressBar("Generating OTP");
+		if(validate(email, password, phoneNo)) {
+			this.email = email;
+			this.password = password;
+			this.phoneNo = phoneNo;
+			interactor.generateOTP(phoneNo);
+			///interactor.registerUser(email, password, phoneNo);
+		}
+	}
+
+	@Override
+	public void onOTPReceived(String OTP) {
+		this.otp = OTP;
+		view.hideProgressBar();
+		view.showOTPDialogBox();
+	}
+
+	@Override
+	public void onOTPEntered(String OTP) {
+		view.showProgressBar("Verifying OTP");
+		if(otp.equals(OTP)) {
+			view.showProgressBar("OTP Verified. Registering User");
+			interactor.registerUser(email, password, phoneNo);
+		}
+		else {
+			view.hideProgressBar();
+			view.registrationError("Incorrect OTP Entered. Please try again");
+			view.showOTPDialogBox();
+		}
 	}
 
 	public boolean validate(String email, String password, String phoneNo) {
